@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const http = require('http');
 const socketIo = require('socket.io');
+require('dotenv').config();
 
 const authRoutes = require('./routes/auth');
 const busRoutes = require('./routes/bus');
@@ -12,24 +13,53 @@ const complaintRoutes = require('./routes/complaint');
 
 const app = express();
 const server = http.createServer(app);
+
+// Determine allowed origins (comma-separated in env or default localhost)
+const allowedOrigins = (process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+  : ["http://localhost:3000", "http://localhost:3001"]) || [];
+
 const io = socketIo(server, {
   cors: {
-    origin: ["http://localhost:3000", "http://localhost:3001"],
-    methods: ["GET", "POST"]
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
   }
 });
 
 // Middleware
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001"],
+  origin: allowedOrigins,
   credentials: true
 }));
 app.use(express.json());
 
+// Health check endpoint for deployment platforms
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', uptime: process.uptime() });
+});
+
 // Database connection
-mongoose.connect('mongodb://localhost:27017/bus-tracker', {
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bus-tracker';
+
+console.log('[DB] Connecting to MongoDB...');
+console.log(`[DB] Using URI: ${MONGODB_URI.replace(/:\/\/([^:@]*):([^@]*)@/,'://****:****@')}`);
+
+mongoose.connect(MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+}).then(() => {
+  console.log('[DB] MongoDB connected successfully');
+}).catch((err) => {
+  console.error('[DB] MongoDB connection error:', err.message);
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('[DB] Connection error event:', err.message);
+});
+
+mongoose.connection.on('disconnected', () => {
+  console.warn('[DB] MongoDB disconnected');
 });
 
 // Routes
@@ -84,7 +114,7 @@ io.on('connection', (socket) => {
 // Make io accessible to routes
 app.set('io', io);
 
-const PORT = 4600;
+const PORT = process.env.PORT || 4600;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
