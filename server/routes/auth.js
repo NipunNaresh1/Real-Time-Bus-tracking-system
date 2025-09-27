@@ -30,10 +30,15 @@ router.post('/register', [
     const { email, phone, password, role, driverName, conductorName, routes, maxCapacity } = req.body;
     console.log('Registration attempt:', { email, phone, role });
 
-    // Check if user already exists
-    let user = await User.findOne({ $or: [{ email }, { phone }] });
-    if (user) {
-      return res.status(400).json({ message: 'User already exists' });
+    // Check if user already exists (email/phone conflicts reported separately)
+    const existingByEmail = await User.findOne({ email });
+    if (existingByEmail) {
+      return res.status(409).json({ message: 'Email already registered' });
+    }
+
+    const existingByPhone = await User.findOne({ phone });
+    if (existingByPhone) {
+      return res.status(409).json({ message: 'Phone number already registered' });
     }
 
     // Create new user
@@ -63,7 +68,7 @@ router.post('/register', [
       }
     }
 
-    user = new User(userData);
+    let user = new User(userData);
 
     await user.save();
 

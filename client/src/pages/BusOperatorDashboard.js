@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { getSocketUrl } from '../config';
 import BusCard from '../components/BusCard';
 import TicketGenerator from '../components/TicketGenerator';
 import LocationTracker from '../components/LocationTracker';
@@ -32,7 +33,10 @@ const BusOperatorDashboard = () => {
   };
 
   const initializeSocket = () => {
-    const newSocket = io('http://localhost:4600');
+    const newSocket = io(getSocketUrl(), {
+      withCredentials: true,
+      transports: ['websocket', 'polling']
+    });
     setSocket(newSocket);
 
     newSocket.on('connect', () => {
@@ -79,7 +83,7 @@ const BusOperatorDashboard = () => {
   const updateLocation = async (busId, location) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`http://localhost:4600/api/bus/${busId}/update-location`, {
+      await axios.post(`/api/bus/${busId}/update-location`, {
         latitude: location.latitude,
         longitude: location.longitude,
         address: location.address || 'Current Location'

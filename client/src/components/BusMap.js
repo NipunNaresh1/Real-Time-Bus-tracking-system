@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import io from 'socket.io-client';
+import { getSocketUrl } from '../config';
 
 // Fix for default markers in Leaflet
 delete L.Icon.Default.prototype._getIconUrl;
@@ -70,45 +72,56 @@ const BusMap = ({ bus }) => {
 
   // Real-time location updates via socket
   useEffect(() => {
-    if (bus && mapInstanceRef.current) {
-      // Listen for real-time location updates
-      const socket = window.io ? window.io() : null;
-      
-      if (socket) {
-        socket.on(`location-update-${bus._id}`, (locationData) => {
-          const { latitude, longitude } = locationData;
-          
-          const busIcon = L.divIcon({
-            className: 'bus-marker',
-            html: '🚌',
-            iconSize: [30, 30],
-            iconAnchor: [15, 15]
-          });
+    if (!bus || !mapInstanceRef.current) return;
 
-          if (markerRef.current) {
-            mapInstanceRef.current.removeLayer(markerRef.current);
-          }
+    const socket = io(getSocketUrl(), {
+      withCredentials: true,
+      transports: ['websocket', 'polling']
+    });
 
-          markerRef.current = L.marker([latitude, longitude], { icon: busIcon })
-            .addTo(mapInstanceRef.current)
-            .bindPopup(`
-              <div class="bus-popup">
-                <h4>Bus ${bus.busNumber}</h4>
-                <p><strong>Route:</strong> ${bus.route?.name || 'Unknown'}</p>
-                <p><strong>Driver:</strong> ${bus.driverName || 'Unknown'}</p>
-                <p><strong>Status:</strong> Live Location</p>
-                <p><strong>Updated:</strong> ${new Date().toLocaleTimeString()}</p>
-              </div>
-            `);
+    // Join specific bus room
+    socket.emit('join-bus', bus._id);
 
-          mapInstanceRef.current.setView([latitude, longitude], 15);
-        });
+    // Listen to generic location-update from server room
+    socket.on('location-update', (data) => {
+      // Optional guard if multiple updates come through
+      if (!data || (data.busId && data.busId !== bus._id)) return;
+      const { location, latitude, longitude } = data;
+      const lat = location?.latitude ?? latitude;
+      const lon = location?.longitude ?? longitude;
+      if (typeof lat !== 'number' || typeof lon !== 'number') return;
 
-        return () => {
-          socket.off(`location-update-${bus._id}`);
-        };
+      const busIcon = L.divIcon({
+        className: 'bus-marker',
+        html: '🚌',
+        iconSize: [30, 30],
+        iconAnchor: [15, 15]
+      });
+
+      if (markerRef.current) {
+        mapInstanceRef.current.removeLayer(markerRef.current);
       }
-    }
+
+      markerRef.current = L.marker([lat, lon], { icon: busIcon })
+        .addTo(mapInstanceRef.current)
+        .bindPopup(`
+          <div class="bus-popup">
+            <h4>Bus ${bus.busNumber}</h4>
+            <p><strong>Route:</strong> ${bus.route?.name || 'Unknown'}</p>
+            <p><strong>Driver:</strong> ${bus.driverName || 'Unknown'}</p>
+            <p><strong>Status:</strong> Live Location</p>
+            <p><strong>Updated:</strong> ${new Date().toLocaleTimeString()}</p>
+          </div>
+        `);
+
+      mapInstanceRef.current.setView([lat, lon], 15);
+    });
+
+    return () => {
+      socket.emit('leave-bus', bus._id);
+      socket.off('location-update');
+      socket.close();
+    };
   }, [bus]);
 
   if (!bus) {
