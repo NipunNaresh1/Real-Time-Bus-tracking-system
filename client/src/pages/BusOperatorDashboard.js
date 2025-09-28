@@ -14,7 +14,7 @@ const BusOperatorDashboard = () => {
   const [buses, setBuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBus, setSelectedBus] = useState(null);
-  const [, setSocket] = useState(null);
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     fetchBuses();
