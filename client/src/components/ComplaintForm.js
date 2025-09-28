@@ -2,6 +2,7 @@ import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
+import { getApiBase } from '../config';
 import './ComplaintForm.css';
 
 const ComplaintForm = ({ onClose, onSubmit }) => {
@@ -94,7 +95,7 @@ const ComplaintForm = ({ onClose, onSubmit }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:4600/api/complaint/create', {
+      const response = await fetch(`${getApiBase()}/api/complaint/create`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
