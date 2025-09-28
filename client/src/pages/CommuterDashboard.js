@@ -3,7 +3,6 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import io from 'socket.io-client';
-import { getApiBase, getSocketUrl } from '../config';
 import BusSearch from '../components/BusSearch';
 import BusList from '../components/BusList';
 import BusMap from '../components/BusMap';
@@ -31,7 +30,7 @@ const CommuterDashboard = () => {
 
   const fetchActiveBuses = async () => {
     try {
-      const response = await axios.get(`${getApiBase()}/api/bus/active`);
+      const response = await axios.get('/api/bus/active');
       setBuses(response.data);
       setFilteredBuses(response.data);
     } catch (error) {
@@ -42,7 +41,7 @@ const CommuterDashboard = () => {
   };
 
   const initializeSocket = () => {
-    const newSocket = io(getSocketUrl());
+    const newSocket = io('http://localhost:4600');
     setSocket(newSocket);
 
     newSocket.on('connect', () => {

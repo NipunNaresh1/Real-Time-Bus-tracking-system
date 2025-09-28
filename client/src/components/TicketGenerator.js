@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { getApiBase } from '../config';
 
 const TicketGenerator = ({ bus, onTicketGenerated }) => {
   const [passengerName, setPassengerName] = useState('');
@@ -16,7 +15,7 @@ const TicketGenerator = ({ bus, onTicketGenerated }) => {
   const fetchTickets = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${getApiBase()}/api/ticket/bus/${bus._id}`, {
+      const response = await axios.get(`http://localhost:4600/api/ticket/bus/${bus._id}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -49,7 +48,7 @@ const TicketGenerator = ({ bus, onTicketGenerated }) => {
     
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.post(`${getApiBase()}/api/ticket/generate`, {
+      const response = await axios.post('http://localhost:4600/api/ticket/generate', {
         busId: bus._id,
         passengerName: passengerName.trim()
       }, {

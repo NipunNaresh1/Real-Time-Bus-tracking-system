@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import io from 'socket.io-client';
-import { getSocketUrl, getApiBase } from '../config';
+import { getSocketUrl } from '../config';
 import BusCard from '../components/BusCard';
 import TicketGenerator from '../components/TicketGenerator';
 import LocationTracker from '../components/LocationTracker';
@@ -23,7 +23,7 @@ const BusOperatorDashboard = () => {
 
   const fetchBuses = async () => {
     try {
-      const response = await axios.get(`${getApiBase()}/api/bus/my-buses`);
+      const response = await axios.get('/api/bus/my-buses');
       setBuses(response.data);
     } catch (error) {
       toast.error('Failed to fetch buses');
@@ -52,7 +52,7 @@ const BusOperatorDashboard = () => {
 
   const createBus = async (busData) => {
     try {
-      const response = await axios.post(`${getApiBase()}/api/bus/create`, busData);
+      const response = await axios.post('/api/bus/create', busData);
       setBuses([...buses, response.data.bus]);
       toast.success('Bus created successfully');
     } catch (error) {
@@ -62,7 +62,7 @@ const BusOperatorDashboard = () => {
 
   const startJourney = async (busId) => {
     try {
-      await axios.post(`${getApiBase()}/api/bus/${busId}/start-journey`);
+      await axios.post(`/api/bus/${busId}/start-journey`);
       await fetchBuses();
       toast.success('Journey started successfully');
     } catch (error) {
@@ -72,7 +72,7 @@ const BusOperatorDashboard = () => {
 
   const endJourney = async (busId) => {
     try {
-      await axios.post(`${getApiBase()}/api/bus/${busId}/end-journey`);
+      await axios.post(`/api/bus/${busId}/end-journey`);
       await fetchBuses();
       toast.success('Journey ended successfully');
     } catch (error) {
@@ -83,7 +83,7 @@ const BusOperatorDashboard = () => {
   const updateLocation = async (busId, location) => {
     try {
       const token = localStorage.getItem('token');
-      await axios.post(`${getApiBase()}/api/bus/${busId}/update-location`, {
+      await axios.post(`/api/bus/${busId}/update-location`, {
         latitude: location.latitude,
         longitude: location.longitude,
         address: location.address || 'Current Location'

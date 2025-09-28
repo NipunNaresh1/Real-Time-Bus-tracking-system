@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { getApiBase } from '../config';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, PieChart, Pie, Cell } from 'recharts';
 import './Dashboard.css';
 
@@ -22,7 +21,7 @@ const AdminDashboard = () => {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await axios.get(`${getApiBase()}/api/admin/dashboard`);
+      const response = await axios.get('/api/admin/dashboard');
       setDashboardData(response.data);
     } catch (error) {
       toast.error('Failed to fetch dashboard data');
@@ -33,7 +32,7 @@ const AdminDashboard = () => {
 
   const fetchRevenueData = async (period = '7') => {
     try {
-      const response = await axios.get(`${getApiBase()}/api/admin/revenue?period=${period}`);
+      const response = await axios.get(`/api/admin/revenue?period=${period}`);
       setRevenueData(response.data);
     } catch (error) {
       toast.error('Failed to fetch revenue data');
@@ -44,7 +43,7 @@ const AdminDashboard = () => {
     setComplaintsLoading(true);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${getApiBase()}/api/complaint/all`, {
+      const response = await axios.get('http://localhost:4600/api/complaint/all', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setComplaints(response.data.complaints || []);
@@ -58,7 +57,7 @@ const AdminDashboard = () => {
   const updateComplaintStatus = async (complaintId, status, response = '') => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.put(`${getApiBase()}/api/complaint/${complaintId}/status`, {
+      const res = await axios.put(`http://localhost:4600/api/complaint/${complaintId}/status`, {
         status,
         response
       }, {
