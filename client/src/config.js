@@ -7,6 +7,8 @@ const API_URL = process.env.REACT_APP_API_URL || '';
 export const getApiBase = () => API_URL;
 export const getSocketUrl = () => API_URL || undefined; // undefined = same origin when proxied in dev
 
-export default {
+const config = {
   API_URL,
 };
+
+export default config;

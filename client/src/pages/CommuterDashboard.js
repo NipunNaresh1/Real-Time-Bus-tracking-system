@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import axios from 'axios';
@@ -24,12 +24,7 @@ const CommuterDashboard = () => {
   const [socket, setSocket] = useState(null);
   const [showComplaintForm, setShowComplaintForm] = useState(false);
 
-  useEffect(() => {
-    fetchActiveBuses();
-    initializeSocket();
-  }, []);
-
-  const fetchActiveBuses = async () => {
+  const fetchActiveBuses = useCallback(async () => {
     try {
       const response = await axios.get(`${getApiBase()}/api/bus/active`);
       setBuses(response.data);
@@ -39,9 +34,9 @@ const CommuterDashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const initializeSocket = () => {
+  const initializeSocket = useCallback(() => {
     const newSocket = io(getSocketUrl());
     setSocket(newSocket);
 
@@ -105,7 +100,7 @@ const CommuterDashboard = () => {
       );
     });
 
-    newSocket.on('journey-started', (data) => {
+    newSocket.on('journey-started', () => {
       fetchActiveBuses();
     });
 
@@ -116,7 +111,11 @@ const CommuterDashboard = () => {
     });
 
     return () => newSocket.close();
-  };
+  }, [fetchActiveBuses]);
+  useEffect(() => {
+    fetchActiveBuses();
+    initializeSocket();
+  }, [fetchActiveBuses, initializeSocket]);
 
   const handleSearch = () => {
     if (!searchQuery.from || !searchQuery.to) {
