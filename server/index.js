@@ -39,6 +39,16 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', uptime: process.uptime() });
 });
 
+// Root route for basic status (prevents 'Cannot GET /')
+app.get('/', (req, res) => {
+  res.json({
+    name: 'Real-Time Bus Tracking API',
+    status: 'running',
+    uptime: process.uptime(),
+    docs: '/health'
+  });
+});
+
 // Database connection
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/bus-tracker';
 
